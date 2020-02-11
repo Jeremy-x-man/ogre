@@ -111,14 +111,16 @@ namespace {
 
 	DataStreamPtr APKFileSystemArchive::open(const Ogre::String &filename, bool readOnly) const
 	{
-	    MemoryDataStreamPtr stream;
+	    	DataStreamPtr stream;
 		AAsset* asset = AAssetManager_open(mAssetMgr, (mPathPreFix + filename).c_str(), AASSET_MODE_BUFFER);
 		if(asset)
 		{
 			off_t length = AAsset_getLength(asset);
-            stream.reset(new Ogre::MemoryDataStream(length, true, true));
-			memcpy(stream->getPtr(), AAsset_getBuffer(asset), length);
+			void* membuf = OGRE_MALLOC(length, Ogre::MEMCATEGORY_GENERAL);
+			memcpy(membuf, AAsset_getBuffer(asset), length);
 			AAsset_close(asset);
+
+			stream = Ogre::DataStreamPtr(new Ogre::MemoryDataStream(filename, membuf, length, true, true));
 		}
 		return stream;
 	}
